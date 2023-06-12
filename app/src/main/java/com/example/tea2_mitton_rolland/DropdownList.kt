@@ -5,15 +5,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 
 data class DropdownItem(val id: Int, val name: String,val pseudoActif:String) {
 }
 
 //la classe DropdownAdapter2 correspond à la liste des To-Do Lists
-class DropdownAdapter(private var items: List<DropdownItem>) : RecyclerView.Adapter<DropdownAdapter.ViewHolder>() {
+class DropdownAdapter(private var items: List<Map<String,String>>) : RecyclerView.Adapter<DropdownAdapter.ViewHolder>() {
 
-    fun updateData(newItems: List<DropdownItem>) {
+    fun updateData(newItems: List<Map<String,String>>) {
         items = newItems
         notifyDataSetChanged()
     }
@@ -36,13 +37,14 @@ class DropdownAdapter(private var items: List<DropdownItem>) : RecyclerView.Adap
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val textViewName: TextView = itemView.findViewById(R.id.textViewName)
 
-        fun bind(item: DropdownItem) {
-            textViewName.text = item.name
+        fun bind(item: Map<String,String>) {
+            val label = item["label"]
+            textViewName.text = label
 
             itemView.setOnClickListener {
                 val context = itemView.context
                 val intent = Intent(context, ShowListActivity::class.java)
-                intent.putExtra("pseudoActif", item.pseudoActif)
+                val toastMessage = "Ouverture de la liste $label"
                 intent.putExtra("selectedItem", adapterPosition)
                 context.startActivity(intent) // Lancer l'intention pour ouvrir ShowListActivity
             }}

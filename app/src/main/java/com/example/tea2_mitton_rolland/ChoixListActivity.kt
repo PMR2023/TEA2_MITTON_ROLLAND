@@ -264,12 +264,8 @@ class ChoixListActivity : BaseActivity() {
                 val listType = object : TypeToken<List<Map<String, String>>>() {}.type
                 val list: List<Map<String, String>> = gson.fromJson(lists, listType)
                 Log.i("Volley",list.toString())
-                val adapter = RecyclerViewAdapter(list)
+                val adapter = DropdownAdapter(list)
                 recyclerView.adapter = adapter
-                adapter.setOnItemClickListener { label ->
-                    val toastMessage = "Ouverture de la liste $label"
-                    Toast.makeText(applicationContext, toastMessage, Toast.LENGTH_SHORT).show()
-                }
             },
             Response.ErrorListener { error ->
                 Log.e("Volley", error.toString())
@@ -300,6 +296,7 @@ class ChoixListActivity : BaseActivity() {
 
             holder.itemView.setOnClickListener {
                 itemClickListener?.invoke(data["label"].toString())
+
             }
         }
 
