@@ -80,7 +80,6 @@ class MainActivity : BaseActivity() {
             if(pseudo!="" && password!="") {
                 var url = "http://tomnab.fr/todo-api/authenticate?user=$pseudo&password=$password"
                 firstApiCall(url,pseudo)
-                apiCallGetUser()
                 var users = getUsersFromSharedPref()
                 Log.i("Volley","Contenu de users : "+users)
 
@@ -259,11 +258,17 @@ private val refreshRunnable = object : Runnable {
                 Toast.makeText(applicationContext, "Connexion réussie", Toast.LENGTH_SHORT).show()
                 saveHashToSharedPref(hash)
 
+                Log.i("Volley", "Pseudoooooo  :"+ intent.getStringExtra("userId"))
+
+
                 //puis ouvrir l'activité ChoixListActivity
                 val intent = Intent(this, ChoixListActivity::class.java)
                 intent.putExtra("pseudoActif", pseudo)
+
                 Log.i("PMR", "[OPENED]ChoixListActivity")
+
                 startActivity(intent)
+
             },
             Response.ErrorListener { error ->
                 Log.i("Volley", error.toString())
@@ -332,38 +337,6 @@ private val refreshRunnable = object : Runnable {
             return (gson.fromJson(json, type) )
         }
         else return ""
-    }
-
-
-    fun apiCallGetUser() {
-
-        Log.i("Volley", "Appel des Users ...")
-
-        val url = "http://tomnab.fr/todo-api/users"
-        val headers = HashMap<String, String>()
-        headers["hash"] = getHashFromSharedPref()
-
-        val request = object : StringRequest(Method.GET, url,
-            Response.Listener<String> { response ->
-                // Convertir la chaîne de caractères JSON en un objet JSON
-                val jsonResponse = JSONObject(response)
-                // Récupérer le hash du JSON
-                val users = jsonResponse.getString("users")
-                Log.i("Volley", "Appel des users réussie : $users")
-                saveUsersToSharedPref(users)
-            },
-            Response.ErrorListener { error ->
-                Log.i("Volley", error.toString())
-            }) {
-            override fun getHeaders(): MutableMap<String, String> {
-                return headers
-            }
-        }
-
-        val queue = Volley.newRequestQueue(this)
-        queue.add(request)
-
-
     }
 }
 

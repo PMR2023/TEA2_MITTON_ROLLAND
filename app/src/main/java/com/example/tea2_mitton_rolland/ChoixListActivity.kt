@@ -29,7 +29,7 @@ class ChoixListActivity : BaseActivity() {
 
     private lateinit var nomPseudoActif: TextView
     private lateinit var toolbar: Toolbar
-    lateinit var profilListeToDo2 : ProfilListeToDo
+    lateinit var profilListeToDo2: ProfilListeToDo
 
 
     private lateinit var editTextNewList: EditText
@@ -37,11 +37,9 @@ class ChoixListActivity : BaseActivity() {
 
     private var pseudoList2: ArrayList<String> = ArrayList()
     private var todoListList: ArrayList<String> = ArrayList()
-    private lateinit var ListdeProfilsDeListeToDo : MutableList<ProfilListeToDo>
+    private lateinit var ListdeProfilsDeListeToDo: MutableList<ProfilListeToDo>
 
-    private lateinit var profilActif : ProfilListeToDo
-
-
+    private lateinit var profilActif: ProfilListeToDo
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,14 +52,15 @@ class ChoixListActivity : BaseActivity() {
         editTextNewList = findViewById(R.id.editTextNewList)
         buttonOk = findViewById(R.id.btnOk)
 
-
-        val intent = intent
         val pseudoActif = intent.getStringExtra("pseudoActif")
-        Log.i("PMR",pseudoActif!!)
+        apiCallGetUser(pseudoActif!!)
+
+        val userId = intent.getStringExtra("userId")
+
+        Log.i("Volley", userId.toString()+pseudoActif.toString())
 
         nomPseudoActif = findViewById(R.id.nomProfilActif)
         nomPseudoActif.text = "Profile : $pseudoActif"
-
 
 
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerViewChoixActivity)
@@ -71,7 +70,7 @@ class ChoixListActivity : BaseActivity() {
         var hash = getHashFromSharedPref()
 
         //Premier appel pour avoir la liste des to-do lists
-        apiCallGetLists(hash)
+        apiCallGetLists(hash,pseudoActif!!)
 
         //profilListeToDo1 = ajouterListe_test(pseudoActif)
         //profilListeToDo2 = findProfilListeToDoByLogin(getProfilListeToDoList(), pseudoActif!!)!!
@@ -115,15 +114,9 @@ class ChoixListActivity : BaseActivity() {
 }
 */
             val newTodoList = editTextNewList.text.toString()
-            apiCallSetList(hash,newTodoList)
-            apiCallGetLists(hash)
-
-
+            apiCallSetList(hash, newTodoList)
         }
-
     }
-
-
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
@@ -142,17 +135,21 @@ class ChoixListActivity : BaseActivity() {
                 startActivity(intent)
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
 
-    fun fromListToDoToDropDownItem(profilListeToDo1: ProfilListeToDo,pseudoActif:String) : List<DropdownItem>{
+    fun fromListToDoToDropDownItem(
+        profilListeToDo1: ProfilListeToDo,
+        pseudoActif: String
+    ): List<DropdownItem> {
         val i = 1
         val dropdownItems = mutableListOf<DropdownItem>()
-        for(listei in profilListeToDo1.getMesListesToDo()){
-            dropdownItems.add(DropdownItem(i,listei.getTitreListeToDo(), pseudoActif))
+        for (listei in profilListeToDo1.getMesListesToDo()) {
+            dropdownItems.add(DropdownItem(i, listei.getTitreListeToDo(), pseudoActif))
         }
-        return(dropdownItems)
+        return (dropdownItems)
     }
 
     /*fun ajouterListe_test(monLogin: String?) : ProfilListeToDo{
@@ -214,7 +211,10 @@ class ChoixListActivity : BaseActivity() {
     }
 
     //fonction qui prend en paramètre une liste de ProfilListeToDo ainsi qu'un login, et renvoie la ProfilListeToDo qui correspond au login
-    fun findProfilListeToDoByLogin(profilListeToDoList: List<ProfilListeToDo>, login: String): ProfilListeToDo? {
+    fun findProfilListeToDoByLogin(
+        profilListeToDoList: List<ProfilListeToDo>,
+        login: String
+    ): ProfilListeToDo? {
         return profilListeToDoList.find { it.login == login }
     }
 
@@ -230,21 +230,21 @@ class ChoixListActivity : BaseActivity() {
 
 
     //Transformer la liste de profils en liste de leurs noms
-    fun getListeToDoListAsString(listesDuProfil: ProfilListeToDo) : ArrayList<String>{
-        val lestdestodo : ArrayList<String> = ArrayList()
-        for(liste : ListeToDo in listesDuProfil.getMesListesToDo()) {
+    fun getListeToDoListAsString(listesDuProfil: ProfilListeToDo): ArrayList<String> {
+        val lestdestodo: ArrayList<String> = ArrayList()
+        for (liste: ListeToDo in listesDuProfil.getMesListesToDo()) {
             liste.getTitreListeToDo().let { lestdestodo.add(it) }
         }
-        return(lestdestodo)
+        return (lestdestodo)
     }
 
     //Appel de l'api pour obtenir les listes et les afficher
-    fun apiCallGetLists(hash:String) {
+    fun apiCallGetLists(hash: String,pseudoActif: String) {
         val url = "http://tomnab.fr/todo-api/lists?hash=$hash"
 
         val request = JsonObjectRequest(
             Request.Method.GET, url, null,
-            Response.Listener { response ->
+            { response ->
 
                 // Récupérer le hash du JSON
                 val lists = response["lists"].toString()
@@ -263,53 +263,92 @@ class ChoixListActivity : BaseActivity() {
                 val gson = Gson()
                 val listType = object : TypeToken<List<Map<String, String>>>() {}.type
                 val list: List<Map<String, String>> = gson.fromJson(lists, listType)
-                Log.i("Volley",list.toString())
-                val adapter = DropdownAdapter(list)
+                Log.i("Volley", list.toString())
+                val listOfTodoLists = mutableListOf<DropdownItem>()
+                for(el in list){
+                    listOfTodoLists.add(DropdownItem(el["id"]!!.toInt(),el["label"].toString(),pseudoActif))
+                }
+                val adapter = DropdownAdapter(listOfTodoLists)
+
                 recyclerView.adapter = adapter
+
+
+
             },
-            Response.ErrorListener { error ->
+            { error ->
                 Log.e("Volley", error.toString())
             })
 
         val queue = Volley.newRequestQueue(this)
         queue.add(request)
-        }
+    }
 
+    fun apiCallSetList(hash: String, newTodoList: String){
+        val userId = intent.getStringExtra("userId")
+        val pseudo = intent.getStringExtra("pseudoActif")!!
 
+        Log.i("Volley","Création d'une liste pour l'utilisateur " + userId + intent.getStringExtra("pseudoActif"))
+        val url = "http://tomnab.fr/todo-api/users/$userId/lists?label=$newTodoList"
+        val headers = HashMap<String, String>()
+        headers["hash"] = hash
 
-
-    class RecyclerViewAdapter(private val dataList: List<Map<String,String>>) : RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder>() {
-
-        private var itemClickListener: ((String) -> Unit)? = null
-
-        fun setOnItemClickListener(listener: (String) -> Unit) {
-            itemClickListener = listener
-        }
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val view = LayoutInflater.from(parent.context).inflate(R.layout.dropdown_item_layout, parent, false)
-            return ViewHolder(view)
-        }
-
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            val data = dataList[position]
-            holder.bind(data["label"].toString())
-
-            holder.itemView.setOnClickListener {
-                itemClickListener?.invoke(data["label"].toString())
-
+        val request = object : StringRequest(Method.POST, url,
+            Response.Listener { response ->
+                apiCallGetLists(hash,pseudo)
+            },
+            Response.ErrorListener { error ->
+                println(error.toString())
+            }
+        ) {
+            override fun getHeaders(): MutableMap<String, String> {
+                return headers
             }
         }
 
-        override fun getItemCount(): Int {
-            return dataList.size
-        }
+        val queue = Volley.newRequestQueue(this)
+        queue.add(request)
+    }
 
-        inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            private val textView: TextView = itemView.findViewById(R.id.textViewName)
+    fun apiCallGetUser(pseudoActif : String) {
 
-            fun bind(data: String) {
-                textView.text = data
+        Log.i("Volley", "Appel des Users ...")
+
+        val url = "http://tomnab.fr/todo-api/users"
+        val headers = HashMap<String, String>()
+        headers["hash"] = getHashFromSharedPref()
+
+        val request = object : StringRequest(Method.GET, url,
+            Response.Listener<String> { response ->
+                // Convertir la chaîne de caractères JSON en un objet JSON
+                val jsonResponse = JSONObject(response)
+                // Récupérer le hash du JSON
+                val users = jsonResponse.getString("users")
+                val gson = Gson()
+                val listType = object : TypeToken<List<Map<String, String>>>() {}.type
+                val list: List<Map<String, String>> = gson.fromJson(users, listType)
+                var id = "1"
+                for(el in list){
+                    if(el["pseudo"]==pseudoActif){
+                        Log.i("Volley", "Pseudo / pseudoActif :"+ el["id"] + " / "+ pseudoActif)
+                        intent.putExtra("userId",el["id"].toString())
+                        Log.i("Volley", "Pseudo  :"+ intent.getStringExtra("userId"))
+
+                    }
+
+
+                }
+                Log.i("Volley", "Pseudo  :"+ intent.getStringExtra("userId"))
+                Log.i("Volley", "Appel des users réussie : $users")
+            },
+            Response.ErrorListener { error ->
+                Log.i("Volley", error.toString())
+            }) {
+            override fun getHeaders(): MutableMap<String, String> {
+                return headers
             }
         }
+
+        val queue = Volley.newRequestQueue(this)
+        queue.add(request)
     }
 }

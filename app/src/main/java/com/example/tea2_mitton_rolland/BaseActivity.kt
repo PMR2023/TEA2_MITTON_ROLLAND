@@ -32,9 +32,5 @@ abstract class BaseActivity : AppCompatActivity() {
         editor.putString("lists", json)
         editor.apply()
     }
-
-    fun apiCallSetList(hash: String, newTodoList: String){
-
-    }
 }
 

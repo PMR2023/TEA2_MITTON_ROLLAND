@@ -1,9 +1,18 @@
 package com.example.tea1_v01
 
+import android.content.Context
+import android.util.Log
+import com.android.volley.Response
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
+
 //La classe ItemToDo représente les tâches à réaliser dans une ToDoList
 class ItemToDo {
     private var description: String = ""
     private var fait: Boolean = false
+    private var hash: String =""
+
+
 
     constructor()
 
@@ -35,5 +44,6 @@ class ItemToDo {
     override fun toString(): String {
         return "'$description' : fait=$fait)"
     }
+
 }
 
